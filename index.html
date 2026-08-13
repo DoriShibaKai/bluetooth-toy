@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Bluetooth Toy Receiver</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif; margin:0; padding:24px; background:#f5f5f7; color:#111; }
+    .card { max-width:520px; margin:0 auto; background:white; border-radius:20px; padding:24px; box-shadow:0 4px 18px rgba(0,0,0,.08); }
+    h1 { font-size:24px; margin-top:0; }
+    #status { margin:14px 0 20px; padding:12px; border-radius:12px; background:#eee; font-weight:600; }
+    button { width:100%; min-height:58px; margin:8px 0; border:none; border-radius:14px; font-size:20px; font-weight:700; touch-action:manipulation; }
+    #connectBtn { background:#0a84ff; color:white; }
+    #pressBtn { background:#34c759; color:white; }
+    #releaseBtn { background:#ff3b30; color:white; }
+    #holdBtn { background:#ffcc00; color:#111; min-height:90px; }
+    button:disabled { opacity:.45; }
+    .small { font-size:14px; color:#666; line-height:1.5; margin-top:14px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Bluetooth Toy Receiver</h1>
+    <div id="status">未接続</div>
+
+    <button id="connectBtn">Bluetooth接続</button>
+    <button id="pressBtn" disabled>PRESS</button>
+    <button id="releaseBtn" disabled>RELEASE</button>
+    <button id="holdBtn" disabled>押している間 ON</button>
+
+    <div class="small">
+      接続先：Bluetooth Toy Receiver<br>
+      PRESS / RELEASE をBLEで送信します。
+    </div>
+  </div>
+
+<script>
+const SERVICE_UUID = '7b1e0001-6b7d-4a8f-9c31-123456789abc';
+const CHARACTERISTIC_UUID = '7b1e0002-6b7d-4a8f-9c31-123456789abc';
+
+let device = null;
+let characteristic = null;
+
+const statusEl = document.getElementById('status');
+const connectBtn = document.getElementById('connectBtn');
+const pressBtn = document.getElementById('pressBtn');
+const releaseBtn = document.getElementById('releaseBtn');
+const holdBtn = document.getElementById('holdBtn');
+
+function setConnectedUI(connected) {
+  pressBtn.disabled = !connected;
+  releaseBtn.disabled = !connected;
+  holdBtn.disabled = !connected;
+}
+
+async function sendCommand(command) {
+  if (!characteristic) return;
+  const data = new TextEncoder().encode(command);
+  try {
+    if (typeof characteristic.writeValueWithoutResponse === 'function') {
+      await characteristic.writeValueWithoutResponse(data);
+    } else {
+      await characteristic.writeValue(data);
+    }
+    statusEl.textContent = `送信: ${command}`;
+  } catch (error) {
+    statusEl.textContent = `送信エラー: ${error.message}`;
+  }
+}
+
+async function connectBluetooth() {
+  try {
+    statusEl.textContent = '機器を選択してください…';
+
+    device = await navigator.bluetooth.requestDevice({
+      filters: [{ services: [SERVICE_UUID] }]
+    });
+
+    device.addEventListener('gattserverdisconnected', () => {
+      characteristic = null;
+      setConnectedUI(false);
+      statusEl.textContent = '切断されました';
+    });
+
+    statusEl.textContent = '接続中…';
+
+    const server = await device.gatt.connect();
+    const service = await server.getPrimaryService(SERVICE_UUID);
+    characteristic = await service.getCharacteristic(CHARACTERISTIC_UUID);
+
+    setConnectedUI(true);
+    statusEl.textContent = `接続済み: ${device.name || 'Bluetooth機器'}`;
+
+  } catch (error) {
+    characteristic = null;
+    setConnectedUI(false);
+    statusEl.textContent = `接続エラー: ${error.message}`;
+  }
+}
+
+connectBtn.addEventListener('click', connectBluetooth);
+pressBtn.addEventListener('click', () => sendCommand('PRESS'));
+releaseBtn.addEventListener('click', () => sendCommand('RELEASE'));
+
+holdBtn.addEventListener('pointerdown', async (e) => {
+  e.preventDefault();
+  await sendCommand('PRESS');
+});
+
+const releaseHold = async (e) => {
+  e.preventDefault();
+  await sendCommand('RELEASE');
+};
+
+holdBtn.addEventListener('pointerup', releaseHold);
+holdBtn.addEventListener('pointercancel', releaseHold);
+
+setConnectedUI(false);
+</script>
+</body>
+</html>
