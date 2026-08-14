@@ -216,7 +216,7 @@ Bluetooth_receive.ino
 ```
 
 ## ブラウザ
-bluetooth-toy/スイッチ/index.html
+bluetooth-toy/index.html
 
 ## 注意
 
