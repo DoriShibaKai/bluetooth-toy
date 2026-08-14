@@ -215,6 +215,9 @@ Notifyを購読
 Bluetooth_receive.ino
 ```
 
+## ブラウザ
+bluetooth-toy/スイッチ/index.html
+
 ## 注意
 
 現在のコードにはBLE HID解析用の詳細なシリアル出力が含まれています。
