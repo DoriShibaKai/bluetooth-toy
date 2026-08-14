@@ -1,4 +1,4 @@
-# Bluetooth スイッチ受信機
+## Bluetooth スイッチ受信機
 
 BLEで受信した入力をGPIO出力へ変換する受信機です。
 
