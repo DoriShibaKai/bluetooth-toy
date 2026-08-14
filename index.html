@@ -3,36 +3,436 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>Bluetooth Toy Receiver</title>
+  <title>Bluetooth スイッチ</title>
   <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif; margin:0; padding:24px; background:#f5f5f7; color:#111; }
-    .card { max-width:520px; margin:0 auto; background:white; border-radius:20px; padding:24px; box-shadow:0 4px 18px rgba(0,0,0,.08); }
-    h1 { font-size:24px; margin-top:0; }
-    #status { margin:14px 0 20px; padding:12px; border-radius:12px; background:#eee; font-weight:600; }
-    button { width:100%; min-height:58px; margin:8px 0; border:none; border-radius:14px; font-size:20px; font-weight:700; touch-action:manipulation; }
-    #connectBtn { background:#0a84ff; color:white; }
-    #pressBtn { background:#34c759; color:white; }
-    #releaseBtn { background:#ff3b30; color:white; }
-    #holdBtn { background:#ffcc00; color:#111; min-height:90px; }
-    button:disabled { opacity:.45; }
-    .small { font-size:14px; color:#666; line-height:1.5; margin-top:14px; }
+    :root{
+      --sky:#dff3ff;
+      --blue:#55b8ff;
+      --blue2:#258fe6;
+      --yellow:#ffd84d;
+      --green:#72d88b;
+      --pink:#ff9eb5;
+      --orange:#ffb45e;
+      --ink:#2c2c2c;
+      --paper:#fffdf8;
+      --line:#d9e7ef;
+      --soft:#f4fbff;
+    }
+
+    *{ box-sizing:border-box; }
+
+    html,body{
+      margin:0;
+      min-height:100%;
+      color:var(--ink);
+      font-family:
+        -apple-system, BlinkMacSystemFont,
+        "Hiragino Kaku Gothic ProN",
+        "Yu Gothic", "Meiryo", sans-serif;
+    }
+
+    body{
+      padding:10px;
+      background:
+        radial-gradient(circle at 15% 8%, #fff4ad 0 46px, transparent 47px),
+        radial-gradient(circle at 89% 15%, #ffd3df 0 58px, transparent 59px),
+        radial-gradient(circle at 8% 90%, #c9f0d4 0 65px, transparent 66px),
+        linear-gradient(180deg, #eaf8ff 0%, #fff9e9 100%);
+    }
+
+    .card{
+      width:min(560px, 100%);
+      margin:0 auto;
+      padding:12px;
+      background:rgba(255,255,255,.96);
+      border:4px solid #fff;
+      border-radius:24px;
+      box-shadow:0 12px 30px rgba(60,100,130,.18);
+    }
+
+    .title{
+      margin:0 0 10px;
+      text-align:center;
+      font-size:clamp(24px, 6vw, 34px);
+      font-weight:900;
+      letter-spacing:.04em;
+    }
+
+    .subtitle{
+      margin:0 0 18px;
+      text-align:center;
+      font-size:15px;
+      color:#58707e;
+      font-weight:700;
+    }
+
+    #status{
+      margin:0 0 10px;
+      padding:10px 12px;
+      border-radius:16px;
+      background:#edf3f6;
+      font-size:15px;
+      font-weight:800;
+      text-align:center;
+    }
+
+    button, select, input{
+      font:inherit;
+    }
+
+    button{
+      border:0;
+      cursor:pointer;
+      touch-action:manipulation;
+      -webkit-tap-highlight-color:transparent;
+    }
+
+    button:disabled{
+      opacity:.45;
+      cursor:not-allowed;
+    }
+
+    #connectBtn{
+      width:100%;
+      min-height:54px;
+      margin-bottom:12px;
+      border-radius:16px;
+      background:linear-gradient(180deg, #66c7ff, #299eea);
+      color:#fff;
+      font-size:17px;
+      font-weight:900;
+      box-shadow:0 6px 0 #1677bc;
+    }
+
+    #connectBtn:active:not(:disabled){
+      transform:translateY(3px);
+      box-shadow:0 3px 0 #1677bc;
+    }
+
+    .section{
+      margin-top:10px;
+      padding:12px;
+      border:2px solid var(--line);
+      border-radius:18px;
+      background:var(--soft);
+    }
+
+    .label{
+      display:block;
+      margin-bottom:6px;
+      font-size:16px;
+      font-weight:900;
+    }
+
+    #switchName{
+      width:100%;
+      min-height:44px;
+      padding:8px 12px;
+      border:3px solid #b8dff5;
+      border-radius:16px;
+      background:white;
+      color:var(--ink);
+      font-size:16px;
+      font-weight:800;
+      outline:none;
+    }
+
+    #switchName:focus{
+      border-color:var(--blue2);
+    }
+
+    #mainSwitch{
+      width:100%;
+      min-height:96px;
+      margin:12px 0 10px;
+      border-radius:22px;
+      background:linear-gradient(180deg, #ffe26c, #ffc82e);
+      color:#222;
+      font-size:clamp(25px, 7vw, 36px);
+      font-weight:1000;
+      line-height:1.15;
+      box-shadow:0 9px 0 #d89d00;
+      user-select:none;
+    }
+
+    #mainSwitch.is-on{
+      background:linear-gradient(180deg, #8ceaa0, #43c967);
+      color:#123f1e;
+      box-shadow:0 9px 0 #239949;
+    }
+
+    #mainSwitch:active:not(:disabled){
+      transform:translateY(4px);
+    }
+
+    .mode-row{
+      display:grid;
+      grid-template-columns:1fr;
+      gap:8px;
+    }
+
+    #modeSelect{
+      width:100%;
+      min-height:48px;
+      padding:7px 42px 7px 14px;
+      border:3px solid #ffca62;
+      border-radius:18px;
+      background:#fff;
+      color:#222;
+      font-size:16px;
+      font-weight:900;
+    }
+
+    #timerPanel{
+      display:none;
+      margin-top:10px;
+      padding:10px;
+      border-radius:16px;
+      background:#fff8c8;
+      border:3px solid #ffd34d;
+    }
+
+    #timerPanel.show{
+      display:block;
+    }
+
+    .timer-title{
+      margin:0 0 10px;
+      text-align:center;
+      font-weight:900;
+      font-size:16px;
+    }
+
+    .timer-controls{
+      display:flex;
+      align-items:stretch;
+      justify-content:center;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+
+    .timer-input-wrap{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      background:white;
+      border:4px solid #ffbd36;
+      border-radius:18px;
+      padding:0 8px;
+      min-height:52px;
+      flex:0 0 auto;
+    }
+
+    #timerSeconds{
+      appearance:textfield;
+      -moz-appearance:textfield;
+      border:0;
+      outline:0;
+      background:transparent;
+      color:#222;
+      text-align:right;
+      font-size:20px;
+      font-weight:1000;
+      min-width:4ch;
+      width:7ch;
+      max-width:none;
+      padding:5px 2px;
+    }
+
+    #timerSeconds::-webkit-outer-spin-button,
+    #timerSeconds::-webkit-inner-spin-button{
+      -webkit-appearance:none;
+      margin:0;
+    }
+
+    .sec{
+      padding-left:4px;
+      font-size:20px;
+      font-weight:900;
+      white-space:nowrap;
+    }
+
+    .stepper{
+      display:grid;
+      grid-template-rows:1fr 1fr;
+      gap:5px;
+      width:56px;
+    }
+
+    .stepper button{
+      min-height:29px;
+      border-radius:11px;
+      background:#ffbd36;
+      color:#4a3300;
+      font-size:17px;
+      font-weight:1000;
+    }
+
+    .stepper button:active{
+      transform:scale(.97);
+    }
+
+    .timer-help{
+      margin:9px 0 0;
+      text-align:center;
+      color:#745c20;
+      font-size:13px;
+      font-weight:700;
+      line-height:1.5;
+    }
+
+    #countdown{
+      display:none;
+      margin-top:12px;
+      padding:10px;
+      border-radius:14px;
+      background:#ffef9e;
+      text-align:center;
+      font-size:16px;
+      font-weight:900;
+    }
+
+    #countdown.show{
+      display:block;
+    }
+
+    .tiny{
+      margin:14px 0 0;
+      color:#667985;
+      text-align:center;
+      font-size:12px;
+      line-height:1.5;
+    }
+
+    @media (max-width:420px){
+      body{ padding:10px; }
+      .card{ padding:12px; border-radius:24px; }
+      .section{ padding:13px; }
+      #mainSwitch{ min-height:112px; }
+    }
+
+    html, body{
+      width:100%;
+      max-width:100%;
+      overflow-x:hidden;
+    }
+
+    .card,
+    .section,
+    #timerPanel,
+    .timer-controls,
+    .timer-input-wrap{
+      max-width:100%;
+    }
+
+    .timer-controls{
+      width:100%;
+      flex-wrap:nowrap;
+    }
+
+    .timer-input-wrap{
+      flex:1 1 auto;
+      min-width:0;
+      width:auto;
+      overflow:hidden;
+    }
+
+    #timerSeconds{
+      min-width:0;
+      max-width:100%;
+      width:5ch;
+      flex:1 1 auto;
+      overflow-x:auto;
+      white-space:nowrap;
+    }
+
+    .stepper{
+      flex:0 0 52px;
+    }
+
+    @media (max-width:480px){
+      body{ padding:6px; }
+      .card{ padding:12px; border-radius:20px; }
+      .section{ padding:10px; }
+      #connectBtn{ min-height:50px; }
+      #mainSwitch{ min-height:86px; margin:10px 0 8px; }
+      .timer-controls{ gap:6px; }
+      .stepper{ flex-basis:48px; }
+      .tiny{ margin-top:8px; }
+    }
+
+    @media (max-height:700px){
+      body{ padding-top:4px; padding-bottom:4px; }
+      .title{ margin-bottom:6px; }
+      #status{ margin-bottom:7px; padding:7px 9px; }
+      #connectBtn{ min-height:46px; margin-bottom:8px; }
+      .section{ margin-top:7px; padding:8px; }
+      #mainSwitch{ min-height:78px; margin:8px 0 7px; }
+      #timerPanel{ margin-top:7px; padding:8px; }
+      .timer-help{ margin-top:5px; }
+      .tiny{ margin-top:6px; }
+    }
+
   </style>
 </head>
 <body>
-  <div class="card">
-    <h1>Bluetooth Toy Receiver</h1>
-    <div id="status">未接続</div>
+  <main class="card">
+    <h1 class="title">Bluetooth スイッチ</h1>
+    <div id="status">まだ つながっていません</div>
 
-    <button id="connectBtn">Bluetooth接続</button>
-    <button id="pressBtn" disabled>PRESS</button>
-    <button id="releaseBtn" disabled>RELEASE</button>
-    <button id="holdBtn" disabled>押している間 ON</button>
+    <button id="connectBtn">Bluetooth つなぐ</button>
 
-    <div class="small">
-      接続先：Bluetooth Toy Receiver<br>
-      PRESS / RELEASE をBLEで送信します。
-    </div>
-  </div>
+    <section class="section">
+      <label class="label" for="switchName">スイッチの なまえ</label>
+      <input id="switchName" type="text" value="スイッチ" maxlength="30">
+    </section>
+
+    <button id="mainSwitch" disabled>スイッチ<br>ON</button>
+
+    <section class="section">
+      <label class="label" for="modeSelect">うごきかた</label>
+      <div class="mode-row">
+        <select id="modeSelect">
+          <option value="direct">おしてる間</option>
+          <option value="latch">もう一回おすまで</option>
+          <option value="timer">タイマーの間</option>
+        </select>
+      </div>
+
+      <div id="timerPanel">
+        <p class="timer-title">タイマーは 何秒？</p>
+
+        <div class="timer-controls">
+          <div class="timer-input-wrap">
+            <input
+              id="timerSeconds"
+              type="text"
+              inputmode="numeric"
+              autocomplete="off"
+              value="5"
+              aria-label="タイマー秒数"
+            >
+            <span class="sec">秒</span>
+          </div>
+
+          <div class="stepper" aria-label="タイマー秒数を増減">
+            <button id="timerUp" type="button" aria-label="1秒増やす">▲</button>
+            <button id="timerDown" type="button" aria-label="1秒減らす">▼</button>
+          </div>
+        </div>
+
+        <p class="timer-help">
+          ▲▼で1秒ずつ変えられます。数字を直接入力してもOKです。
+        </p>
+
+        <div id="countdown"></div>
+      </div>
+    </section>
+
+    <p class="tiny">
+      接続先：Bluetooth Toy Receiver
+    </p>
+  </main>
 
 <script>
 const SERVICE_UUID = '7b1e0001-6b7d-4a8f-9c31-123456789abc';
@@ -41,80 +441,434 @@ const CHARACTERISTIC_UUID = '7b1e0002-6b7d-4a8f-9c31-123456789abc';
 let device = null;
 let characteristic = null;
 
+let outputOn = false;
+let timerRunning = false;
+let timerEndMs = 0;
+let timerWatchId = null;
+const SWITCH_NAME_STORAGE_KEY = 'bluetoothToyReceiverSwitchName';
+
 const statusEl = document.getElementById('status');
 const connectBtn = document.getElementById('connectBtn');
-const pressBtn = document.getElementById('pressBtn');
-const releaseBtn = document.getElementById('releaseBtn');
-const holdBtn = document.getElementById('holdBtn');
+const mainSwitch = document.getElementById('mainSwitch');
+const modeSelect = document.getElementById('modeSelect');
+const timerPanel = document.getElementById('timerPanel');
+const timerSeconds = document.getElementById('timerSeconds');
+const timerUp = document.getElementById('timerUp');
+const timerDown = document.getElementById('timerDown');
+const countdown = document.getElementById('countdown');
+const switchName = document.getElementById('switchName');
 
-function setConnectedUI(connected) {
-  pressBtn.disabled = !connected;
-  releaseBtn.disabled = !connected;
-  holdBtn.disabled = !connected;
+const savedSwitchName = localStorage.getItem(SWITCH_NAME_STORAGE_KEY);
+if (savedSwitchName !== null && savedSwitchName.trim() !== ''){
+  switchName.value = savedSwitchName;
 }
 
-async function sendCommand(command) {
-  if (!characteristic) return;
+function isConnected(){
+  return !!characteristic;
+}
+
+function setConnectedUI(connected){
+  mainSwitch.disabled = !connected;
+  if (!connected){
+    setVisualOn(false);
+  }
+}
+
+function setVisualOn(on){
+  outputOn = on;
+  mainSwitch.classList.toggle('is-on', on);
+
+  const name = (switchName.value.trim() || 'スイッチ');
+
+  if (modeSelect.value === 'timer' && timerRunning && on){
+    mainSwitch.innerHTML = `${escapeHtml(name)}<br>ON`;
+  } else if (on){
+    mainSwitch.innerHTML = `${escapeHtml(name)}<br>ON`;
+  } else {
+    mainSwitch.innerHTML = `${escapeHtml(name)}<br>ON`;
+  }
+}
+
+function escapeHtml(text){
+  return text
+    .replaceAll('&','&amp;')
+    .replaceAll('<','&lt;')
+    .replaceAll('>','&gt;')
+    .replaceAll('"','&quot;')
+    .replaceAll("'","&#039;");
+}
+
+async function sendCommand(command){
+  if (!characteristic) return false;
+
   const data = new TextEncoder().encode(command);
-  try {
-    if (typeof characteristic.writeValueWithoutResponse === 'function') {
+
+  try{
+    if (typeof characteristic.writeValueWithoutResponse === 'function'){
       await characteristic.writeValueWithoutResponse(data);
     } else {
       await characteristic.writeValue(data);
     }
-    statusEl.textContent = `送信: ${command}`;
-  } catch (error) {
-    statusEl.textContent = `送信エラー: ${error.message}`;
+    return true;
+  } catch(error){
+    statusEl.textContent = `送信エラー：${error.message}`;
+    return false;
   }
 }
 
-async function connectBluetooth() {
-  try {
-    statusEl.textContent = '機器を選択してください…';
+async function connectBluetooth(){
+  try{
+    statusEl.textContent = 'Bluetooth機器を えらんでください…';
 
     device = await navigator.bluetooth.requestDevice({
-      filters: [{ services: [SERVICE_UUID] }]
+      filters:[{ services:[SERVICE_UUID] }]
     });
 
-    device.addEventListener('gattserverdisconnected', () => {
-      characteristic = null;
-      setConnectedUI(false);
-      statusEl.textContent = '切断されました';
-    });
+    device.addEventListener('gattserverdisconnected', handleDisconnected);
 
-    statusEl.textContent = '接続中…';
+    statusEl.textContent = 'つないでいます…';
 
     const server = await device.gatt.connect();
     const service = await server.getPrimaryService(SERVICE_UUID);
     characteristic = await service.getCharacteristic(CHARACTERISTIC_UUID);
 
     setConnectedUI(true);
-    statusEl.textContent = `接続済み: ${device.name || 'Bluetooth機器'}`;
+    statusEl.textContent = 'つながりました！';
 
-  } catch (error) {
+  } catch(error){
     characteristic = null;
     setConnectedUI(false);
-    statusEl.textContent = `接続エラー: ${error.message}`;
+    statusEl.textContent = `接続エラー：${error.message}`;
   }
 }
 
-connectBtn.addEventListener('click', connectBluetooth);
-pressBtn.addEventListener('click', () => sendCommand('PRESS'));
-releaseBtn.addEventListener('click', () => sendCommand('RELEASE'));
+function handleDisconnected(){
+  characteristic = null;
+  stopTimerWatch();
+  timerRunning = false;
+  setConnectedUI(false);
+  statusEl.textContent = 'Bluetoothが きれました';
+}
 
-holdBtn.addEventListener('pointerdown', async (e) => {
-  e.preventDefault();
-  await sendCommand('PRESS');
+function cleanTimerText(){
+  let value = timerSeconds.value.replace(/[^\d]/g, '');
+
+  // 先頭の0を整理。ただし全部0なら "0"
+  value = value.replace(/^0+(?=\d)/, '');
+
+  if (value === ''){
+    timerSeconds.value = '';
+  } else {
+    timerSeconds.value = value;
+  }
+
+  resizeTimerInput();
+}
+
+function getTimerSeconds(){
+  cleanTimerText();
+
+  if (timerSeconds.value === ''){
+    timerSeconds.value = '1';
+  }
+
+  let n = Number(timerSeconds.value);
+
+  if (!Number.isFinite(n) || n < 1){
+    n = 1;
+    timerSeconds.value = '1';
+  }
+
+  // Date.now() + 秒×1000 がJavaScriptのDate範囲を越えないようにする。
+  // それでも約27万年分まで入力できます。
+  const maxSeconds = 8000000000000;
+
+  if (n > maxSeconds){
+    n = maxSeconds;
+    timerSeconds.value = String(maxSeconds);
+  }
+
+  n = Math.floor(n);
+  timerSeconds.value = String(n);
+
+  resizeTimerInput();
+  return n;
+}
+
+function setTimerSeconds(n){
+  const maxSeconds = 8000000000000;
+  n = Math.floor(Number(n));
+
+  if (!Number.isFinite(n)) n = 1;
+  if (n < 1) n = 1;
+  if (n > maxSeconds) n = maxSeconds;
+
+  timerSeconds.value = String(n);
+  resizeTimerInput();
+}
+
+function resizeTimerInput(){
+  const length = Math.max(1, timerSeconds.value.length);
+
+  // 桁数に合わせて入力欄は広がる。
+  // ただし親要素の幅を超えないので、iPhone / iPad / PCでも
+  // ブラウザの横幅からはみ出さない。
+  const widthCh = Math.max(4.5, length + 1.5);
+  timerSeconds.style.width = `${widthCh}ch`;
+  timerSeconds.style.maxWidth = '100%';
+
+  // 非常に大きな数では、枠は画面いっぱいまで広がり、
+  // それ以上は入力欄の中で横スクロールする。
+  timerSeconds.scrollLeft = timerSeconds.scrollWidth;
+}
+
+function changeTimerBy(delta){
+  let current = timerSeconds.value.trim();
+
+  if (!/^\d+$/.test(current)){
+    current = '1';
+  }
+
+  // 大きな数でも1秒ずつ確実に増減できるようBigIntを使う。
+  let value = BigInt(current || '1');
+  value += BigInt(delta);
+
+  if (value < 1n) value = 1n;
+
+  const max = 8000000000000n;
+  if (value > max) value = max;
+
+  timerSeconds.value = value.toString();
+  resizeTimerInput();
+}
+
+function stopTimerWatch(){
+  if (timerWatchId !== null){
+    clearInterval(timerWatchId);
+    timerWatchId = null;
+  }
+  countdown.classList.remove('show');
+}
+
+function formatRemaining(seconds){
+  if (seconds < 60) return `${seconds}秒`;
+
+  const days = Math.floor(seconds / 86400);
+  const hours = Math.floor((seconds % 86400) / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const secs = seconds % 60;
+
+  if (days > 0){
+    return `${days}日 ${hours}時間 ${minutes}分 ${secs}秒`;
+  }
+  if (hours > 0){
+    return `${hours}時間 ${minutes}分 ${secs}秒`;
+  }
+  return `${minutes}分 ${secs}秒`;
+}
+
+function startTimerWatch(){
+  stopTimerWatch();
+  countdown.classList.add('show');
+
+  const update = async () => {
+    const remainingMs = timerEndMs - Date.now();
+
+    if (remainingMs <= 0){
+      stopTimerWatch();
+      timerRunning = false;
+
+      if (outputOn){
+        await sendCommand('RELEASE');
+        setVisualOn(false);
+      }
+
+      statusEl.textContent = 'タイマー おわり！';
+      return;
+    }
+
+    const remainingSeconds = Math.ceil(remainingMs / 1000);
+    countdown.textContent = `あと ${formatRemaining(remainingSeconds)}`;
+  };
+
+  update();
+  timerWatchId = setInterval(update, 250);
+}
+
+async function stopOutput(){
+  stopTimerWatch();
+  timerRunning = false;
+
+  if (outputOn && isConnected()){
+    await sendCommand('RELEASE');
+  }
+
+  setVisualOn(false);
+}
+
+async function changeMode(){
+  await stopOutput();
+
+  timerPanel.classList.toggle(
+    'show',
+    modeSelect.value === 'timer'
+  );
+
+  if (modeSelect.value === 'direct'){
+    statusEl.textContent = isConnected()
+      ? 'おしている間だけ ON'
+      : 'まだ つながっていません';
+  }
+
+  if (modeSelect.value === 'latch'){
+    statusEl.textContent = isConnected()
+      ? '1回おすとON、もう1回でOFF'
+      : 'まだ つながっていません';
+  }
+
+  if (modeSelect.value === 'timer'){
+    statusEl.textContent = isConnected()
+      ? 'おすとタイマーの間 ON'
+      : 'まだ つながっていません';
+  }
+}
+
+// -------------------------
+// ダイレクトモード
+// 押している間だけON
+// -------------------------
+mainSwitch.addEventListener('pointerdown', async (event) => {
+  if (mainSwitch.disabled) return;
+  if (modeSelect.value !== 'direct') return;
+
+  event.preventDefault();
+
+  try{
+    mainSwitch.setPointerCapture(event.pointerId);
+  } catch(_){}
+
+  const ok = await sendCommand('PRESS');
+
+  if (ok){
+    setVisualOn(true);
+    statusEl.textContent = 'ON！';
+  }
 });
 
-const releaseHold = async (e) => {
-  e.preventDefault();
-  await sendCommand('RELEASE');
-};
+async function releaseDirect(event){
+  if (mainSwitch.disabled) return;
+  if (modeSelect.value !== 'direct') return;
 
-holdBtn.addEventListener('pointerup', releaseHold);
-holdBtn.addEventListener('pointercancel', releaseHold);
+  if (event) event.preventDefault();
 
+  if (outputOn){
+    await sendCommand('RELEASE');
+    setVisualOn(false);
+    statusEl.textContent = 'OFF';
+  }
+}
+
+mainSwitch.addEventListener('pointerup', releaseDirect);
+mainSwitch.addEventListener('pointercancel', releaseDirect);
+mainSwitch.addEventListener('lostpointercapture', releaseDirect);
+
+// -------------------------
+// ラッチ・タイマーモード
+// -------------------------
+mainSwitch.addEventListener('click', async () => {
+  if (mainSwitch.disabled) return;
+
+  const mode = modeSelect.value;
+
+  if (mode === 'direct'){
+    return;
+  }
+
+  if (mode === 'latch'){
+    if (!outputOn){
+      const ok = await sendCommand('PRESS');
+      if (ok){
+        setVisualOn(true);
+        statusEl.textContent = 'ON！ もう1回おすとOFF';
+      }
+    } else {
+      const ok = await sendCommand('RELEASE');
+      if (ok){
+        setVisualOn(false);
+        statusEl.textContent = 'OFF';
+      }
+    }
+    return;
+  }
+
+  if (mode === 'timer'){
+    const seconds = getTimerSeconds();
+
+    // すでにONなら、RELEASEはせずタイマーだけ最初から数え直す。
+    if (!outputOn){
+      const ok = await sendCommand('PRESS');
+      if (!ok) return;
+      setVisualOn(true);
+    }
+
+    timerRunning = true;
+    timerEndMs = Date.now() + (seconds * 1000);
+    statusEl.textContent = `タイマー ON：${seconds}秒`;
+    startTimerWatch();
+  }
+});
+
+connectBtn.addEventListener('click', connectBluetooth);
+
+modeSelect.addEventListener('change', changeMode);
+
+switchName.addEventListener('input', () => {
+  localStorage.setItem(SWITCH_NAME_STORAGE_KEY, switchName.value);
+  setVisualOn(outputOn);
+});
+
+timerSeconds.addEventListener('input', () => {
+  cleanTimerText();
+});
+
+timerSeconds.addEventListener('blur', () => {
+  getTimerSeconds();
+});
+
+timerUp.addEventListener('click', () => {
+  changeTimerBy(1);
+});
+
+timerDown.addEventListener('click', () => {
+  changeTimerBy(-1);
+});
+
+// Enterキーで直接入力を確定
+timerSeconds.addEventListener('keydown', (event) => {
+  if (event.key === 'Enter'){
+    event.preventDefault();
+    getTimerSeconds();
+    timerSeconds.blur();
+  }
+});
+
+// ページを閉じる直前に可能ならOFFを送る
+window.addEventListener('beforeunload', () => {
+  if (!characteristic || !outputOn) return;
+
+  try{
+    const data = new TextEncoder().encode('RELEASE');
+
+    if (typeof characteristic.writeValueWithoutResponse === 'function'){
+      characteristic.writeValueWithoutResponse(data);
+    } else {
+      characteristic.writeValue(data);
+    }
+  } catch(_){}
+});
+
+resizeTimerInput();
+changeMode();
 setConnectedUI(false);
 </script>
 </body>
